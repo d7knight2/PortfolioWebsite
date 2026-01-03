@@ -104,6 +104,53 @@ export default function Home() {
             </div>
           </section>
 
+          <section style={styles.experienceSection}>
+            <h2 style={styles.sectionTitle}>Professional Experience</h2>
+            <div style={styles.experienceGrid}>
+              <div style={styles.experienceCard}>
+                <div style={styles.experienceHeader}>
+                  <div>
+                    <h3 style={styles.experienceCompany}>Tinder</h3>
+                    <p style={styles.experienceRole}>Android Engineer</p>
+                  </div>
+                  <div style={styles.companyLogo}>🔥</div>
+                </div>
+                <div style={styles.accomplishments}>
+                  <h4 style={styles.accomplishmentsTitle}>Key Accomplishments:</h4>
+                  <ul style={styles.accomplishmentsList}>
+                    <li style={styles.accomplishmentItem}>
+                      Single handedly architected Loops playback and creation using ExoPlayer and MediaCodec
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🏆 Won the 2021 Tinder All Stars Award - First ever Tinder All Star for Android!
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🌺 Won the 2021 Tinder Kudos Award and Tinder Challenge - included a trip to Maui, Hawaii with my wife
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🤖 Nominated as a Tinder AI Champion
+                    </li>
+                  </ul>
+                  <h4 style={styles.accomplishmentsTitle}>Hackathon Victories:</h4>
+                  <ul style={styles.accomplishmentsList}>
+                    <li style={styles.accomplishmentItem}>
+                      🥇 Hackathon "Stacks on Stacks" 2022 - 1st Place
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🥈 Hackathon "Black Pearl" 2022 - 2nd Place
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🥉 Hackathon "Skinz" 2021 - 3rd Place
+                    </li>
+                    <li style={styles.accomplishmentItem}>
+                      🥉 Hackathon "Anti Abuse Agent" 2025 - 3rd Place
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section style={styles.skillsSection}>
             <h2 style={styles.sectionTitle}>Technologies & Tools</h2>
             <div style={styles.skillsGrid}>
@@ -351,5 +398,58 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   footerLink: {
     color: '#60a5fa',
+  },
+  experienceSection: {
+    padding: '4rem 2rem',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    backgroundColor: '#0f172a',
+  },
+  experienceGrid: {
+    display: 'grid',
+    gap: '2rem',
+  },
+  experienceCard: {
+    backgroundColor: '#1e293b',
+    border: '1px solid #334155',
+    borderRadius: '12px',
+    padding: '2rem',
+  },
+  experienceHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '1.5rem',
+  },
+  experienceCompany: {
+    fontSize: '1.8rem',
+    margin: '0 0 0.5rem 0',
+    color: '#f1f5f9',
+  },
+  experienceRole: {
+    fontSize: '1.2rem',
+    color: '#94a3b8',
+    margin: 0,
+  },
+  companyLogo: {
+    fontSize: '3rem',
+  },
+  accomplishments: {
+    marginTop: '1rem',
+  },
+  accomplishmentsTitle: {
+    fontSize: '1.2rem',
+    color: '#3b82f6',
+    marginBottom: '1rem',
+  },
+  accomplishmentsList: {
+    margin: 0,
+    paddingLeft: '1.5rem',
+    color: '#cbd5e1',
+  },
+  accomplishmentItem: {
+    marginBottom: '0.75rem',
+    lineHeight: '1.6',
+    fontSize: '1rem',
   },
 };
