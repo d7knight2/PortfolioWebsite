@@ -1,7 +1,38 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [currentAchievement, setCurrentAchievement] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const achievements = [
+    { emoji: '🏆', title: '2021 Tinder All Stars', subtitle: 'First Android All Star Ever!', color: '#fbbf24' },
+    { emoji: '🌺', title: '2021 Kudos Award', subtitle: 'Trip to Maui, Hawaii', color: '#f472b6' },
+    { emoji: '🤖', title: 'AI Champion', subtitle: 'Tinder AI Champion Nominee', color: '#60a5fa' },
+    { emoji: '🥇', title: 'Stacks on Stacks 2022', subtitle: '1st Place Hackathon', color: '#fbbf24' },
+    { emoji: '🥈', title: 'Black Pearl 2022', subtitle: '2nd Place Hackathon', color: '#94a3b8' },
+    { emoji: '🥉', title: 'Skinz 2021', subtitle: '3rd Place Hackathon', color: '#d97706' },
+  ];
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    const interval = setInterval(() => {
+      setCurrentAchievement((prev) => (prev + 1) % achievements.length);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearInterval(interval);
+    };
+  }, [achievements.length]);
+
   return (
     <>
       <Head>
@@ -100,6 +131,47 @@ export default function Home() {
                   I love solving complex problems and fine-tuning apps to run at lightning 
                   speed! Performance optimization is my specialty.
                 </p>
+              </div>
+            </div>
+          </section>
+
+          <section style={styles.achievementsSection}>
+            <h2 style={styles.sectionTitle}>🏆 Achievements Showcase</h2>
+            <div style={styles.carouselContainer}>
+              <div style={styles.carousel}>
+                {achievements.map((achievement, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      ...styles.achievementCard,
+                      transform: `translateX(${(index - currentAchievement) * (isMobile ? 100 : 110)}%)`,
+                      opacity: index === currentAchievement ? 1 : 0.3,
+                      scale: index === currentAchievement ? '1' : '0.85',
+                      borderColor: achievement.color,
+                      boxShadow: index === currentAchievement ? `0 10px 40px ${achievement.color}40` : 'none',
+                    }}
+                  >
+                    <div style={{ ...styles.achievementEmoji, color: achievement.color }}>
+                      {achievement.emoji}
+                    </div>
+                    <h3 style={styles.achievementTitle}>{achievement.title}</h3>
+                    <p style={styles.achievementSubtitle}>{achievement.subtitle}</p>
+                  </div>
+                ))}
+              </div>
+              <div style={styles.carouselDots}>
+                {achievements.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentAchievement(index)}
+                    style={{
+                      ...styles.carouselDot,
+                      backgroundColor: index === currentAchievement ? '#3b82f6' : '#334155',
+                      transform: index === currentAchievement ? 'scale(1.3)' : 'scale(1)',
+                    }}
+                    aria-label={`Go to achievement ${index + 1}`}
+                  />
+                ))}
               </div>
             </div>
           </section>
@@ -237,9 +309,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
   navBrand: {
-    fontSize: '1.5rem',
+    fontSize: 'clamp(1.2rem, 4vw, 1.5rem)',
     fontWeight: 'bold',
     background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
     WebkitBackgroundClip: 'text',
@@ -247,19 +321,20 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   navLinks: {
     display: 'flex',
-    gap: '2rem',
+    gap: 'clamp(1rem, 3vw, 2rem)',
+    flexWrap: 'wrap',
   },
   navLink: {
     color: '#cbd5e1',
     transition: 'color 0.3s',
-    fontSize: '1rem',
+    fontSize: 'clamp(0.875rem, 2vw, 1rem)',
   },
   main: {
     flex: 1,
     width: '100%',
   },
   hero: {
-    padding: '4rem 2rem',
+    padding: 'clamp(2rem, 8vw, 4rem) clamp(1rem, 4vw, 2rem)',
     textAlign: 'center',
     background: 'linear-gradient(to bottom, #0f172a, #1e293b)',
   },
@@ -268,7 +343,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: '0 auto',
   },
   heroTitle: {
-    fontSize: '3rem',
+    fontSize: 'clamp(2rem, 6vw, 3rem)',
     fontWeight: 'bold',
     margin: '0 0 1rem 0',
     color: '#f1f5f9',
@@ -279,12 +354,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     WebkitTextFillColor: 'transparent',
   },
   heroSubtitle: {
-    fontSize: '1.5rem',
+    fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
     color: '#94a3b8',
     margin: '0 0 2rem 0',
   },
   heroDescription: {
-    fontSize: '1.1rem',
+    fontSize: 'clamp(1rem, 2.5vw, 1.1rem)',
     color: '#cbd5e1',
     lineHeight: '1.8',
     margin: '0 0 2rem 0',
@@ -317,34 +392,34 @@ const styles: { [key: string]: React.CSSProperties } = {
     transition: 'all 0.3s',
   },
   aboutSection: {
-    padding: '4rem 2rem',
+    padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 2rem)',
     maxWidth: '1200px',
     margin: '0 auto',
   },
   sectionTitle: {
-    fontSize: '2.5rem',
+    fontSize: 'clamp(2rem, 5vw, 2.5rem)',
     textAlign: 'center',
-    marginBottom: '3rem',
+    marginBottom: 'clamp(2rem, 5vw, 3rem)',
     color: '#f1f5f9',
   },
   aboutGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '2rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
+    gap: 'clamp(1.5rem, 4vw, 2rem)',
   },
   aboutCard: {
     backgroundColor: '#1e293b',
     border: '1px solid #334155',
     borderRadius: '12px',
-    padding: '2rem',
+    padding: 'clamp(1.5rem, 4vw, 2rem)',
     textAlign: 'center',
   },
   emoji: {
-    fontSize: '3rem',
+    fontSize: 'clamp(2.5rem, 6vw, 3rem)',
     marginBottom: '1rem',
   },
   cardTitle: {
-    fontSize: '1.5rem',
+    fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)',
     marginBottom: '1rem',
     color: '#f1f5f9',
   },
@@ -352,17 +427,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#cbd5e1',
     lineHeight: '1.6',
     margin: 0,
+    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
   },
   skillsSection: {
-    padding: '4rem 2rem',
+    padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 2rem)',
     maxWidth: '1200px',
     margin: '0 auto',
     backgroundColor: '#1e293b',
   },
   skillsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '2rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+    gap: 'clamp(1.5rem, 4vw, 2rem)',
   },
   skillCategory: {
     backgroundColor: '#0f172a',
@@ -400,7 +476,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#60a5fa',
   },
   experienceSection: {
-    padding: '4rem 2rem',
+    padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 2rem)',
     maxWidth: '1200px',
     margin: '0 auto',
     backgroundColor: '#0f172a',
@@ -413,32 +489,34 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: '#1e293b',
     border: '1px solid #334155',
     borderRadius: '12px',
-    padding: '2rem',
+    padding: 'clamp(1.5rem, 4vw, 2rem)',
   },
   experienceHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '1.5rem',
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
   experienceCompany: {
-    fontSize: '1.8rem',
+    fontSize: 'clamp(1.5rem, 4vw, 1.8rem)',
     margin: '0 0 0.5rem 0',
     color: '#f1f5f9',
   },
   experienceRole: {
-    fontSize: '1.2rem',
+    fontSize: 'clamp(1rem, 3vw, 1.2rem)',
     color: '#94a3b8',
     margin: 0,
   },
   companyLogo: {
-    fontSize: '3rem',
+    fontSize: 'clamp(2.5rem, 6vw, 3rem)',
   },
   accomplishments: {
     marginTop: '1rem',
   },
   accomplishmentsTitle: {
-    fontSize: '1.2rem',
+    fontSize: 'clamp(1rem, 3vw, 1.2rem)',
     color: '#3b82f6',
     marginBottom: '1rem',
   },
@@ -450,6 +528,78 @@ const styles: { [key: string]: React.CSSProperties } = {
   accomplishmentItem: {
     marginBottom: '0.75rem',
     lineHeight: '1.6',
-    fontSize: '1rem',
+    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+  },
+  achievementsSection: {
+    padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 2rem)',
+    backgroundColor: '#1e293b',
+    overflow: 'hidden',
+  },
+  carouselContainer: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    position: 'relative',
+    height: 'clamp(280px, 40vw, 350px)',
+  },
+  carousel: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    height: '100%',
+    perspective: '1000px',
+  },
+  achievementCard: {
+    position: 'absolute',
+    backgroundColor: '#0f172a',
+    border: '3px solid',
+    borderRadius: '20px',
+    padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+    width: 'clamp(250px, 80vw, 320px)',
+    height: 'clamp(220px, 35vw, 280px)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  achievementEmoji: {
+    fontSize: 'clamp(3rem, 8vw, 4rem)',
+    animation: 'float 3s ease-in-out infinite',
+    textShadow: '0 5px 15px currentColor',
+  },
+  achievementTitle: {
+    fontSize: 'clamp(1.2rem, 3vw, 1.5rem)',
+    fontWeight: 'bold',
+    color: '#f1f5f9',
+    textAlign: 'center',
+    margin: 0,
+  },
+  achievementSubtitle: {
+    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+    color: '#94a3b8',
+    textAlign: 'center',
+    margin: 0,
+  },
+  carouselDots: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    position: 'absolute',
+    bottom: '-2.5rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+  },
+  carouselDot: {
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    padding: 0,
   },
 };
