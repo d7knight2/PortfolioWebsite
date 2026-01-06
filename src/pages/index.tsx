@@ -533,7 +533,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   achievementsSection: {
     padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 2rem)',
     backgroundColor: '#1e293b',
-    overflow: 'hidden',
   },
   carouselContainer: {
     maxWidth: '1200px',
@@ -549,6 +548,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     position: 'relative',
     height: '100%',
     perspective: '1000px',
+    overflow: 'hidden',
   },
   achievementCard: {
     position: 'absolute',
