@@ -29,8 +29,14 @@ test.describe('Achievements Carousel', () => {
     const secondDot = page.locator('button[aria-label="Go to achievement 2"]');
     await secondDot.click();
     
-    // Wait a moment for transition
-    await page.waitForTimeout(500);
+    // Wait for the CSS transition to complete by checking opacity change
+    await page.waitForFunction(() => {
+      const buttons = document.querySelectorAll('button[aria-label^="Go to achievement"]');
+      const secondButton = Array.from(buttons)[1] as HTMLElement;
+      if (!secondButton) return false;
+      const bgColor = window.getComputedStyle(secondButton).backgroundColor;
+      return bgColor === 'rgb(59, 130, 246)'; // Active color #3b82f6
+    }, { timeout: 2000 });
     
     // Check that an achievement card is visible
     const achievementCards = page.locator('h3').filter({ hasText: /Kudos Award|AI Champion|Stacks on Stacks|Black Pearl|Skinz/ });
@@ -58,7 +64,9 @@ test.describe('Achievements Carousel', () => {
     
     // Scroll to achievements section
     await page.locator('h2:has-text("Achievements Showcase")').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
+    
+    // Wait for carousel to be stable
+    await page.locator('button[aria-label="Go to achievement 1"]').waitFor({ state: 'visible' });
     
     // Get the carousel container
     const carouselSection = page.locator('h2:has-text("Achievements Showcase")').locator('..');
@@ -78,9 +86,9 @@ test.describe('Achievements Carousel', () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     
-    // Scroll to achievements section
+    // Scroll to achievements section and wait for it to be visible
     await page.locator('h2:has-text("Achievements Showcase")').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
+    await page.locator('button[aria-label="Go to achievement 1"]').waitFor({ state: 'visible' });
     
     // Check dots are visible in the DOM
     const dots = page.locator('button[aria-label^="Go to achievement"]');
@@ -113,11 +121,27 @@ test.describe('Achievements Carousel', () => {
   });
 
   test('should have clickable achievement cards', async ({ page }) => {
-    const cards = page.locator('h3').filter({ hasText: /2021 Tinder All Stars|Kudos Award|AI Champion/ });
-    const firstCard = cards.first().locator('..');
+    // Verify achievement cards have pointer cursor via JavaScript evaluation
+    const hasPointerCursor = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll('h3')).filter(h3 => 
+        h3.textContent && (
+          h3.textContent.includes('2021 Tinder All Stars') ||
+          h3.textContent.includes('Kudos Award') ||
+          h3.textContent.includes('AI Champion')
+        )
+      );
+      
+      if (cards.length === 0) return false;
+      
+      // Check the parent div of the h3 element
+      const card = cards[0].parentElement;
+      if (!card) return false;
+      
+      const style = window.getComputedStyle(card);
+      return style.cursor === 'pointer';
+    });
     
-    // Verify card has pointer cursor (indicates it's clickable)
-    await expect(firstCard).toHaveCSS('cursor', 'pointer');
+    expect(hasPointerCursor).toBe(true);
   });
 });
 
@@ -126,15 +150,30 @@ test.describe('Achievements Carousel - Auto-rotation', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     
-    // Get initial active dot (first one should be active)
+    // Get the first dot which should be active initially
     const firstDot = page.locator('button[aria-label="Go to achievement 1"]');
-    const initialColor = await firstDot.evaluate((el) => window.getComputedStyle(el).backgroundColor);
     
-    // Wait for auto-rotation (3 seconds as per code)
-    await page.waitForTimeout(3500);
+    // Wait for first dot to be active (has active background color)
+    await page.waitForFunction(() => {
+      const button = document.querySelector('button[aria-label="Go to achievement 1"]') as HTMLElement;
+      if (!button) return false;
+      const bgColor = window.getComputedStyle(button).backgroundColor;
+      return bgColor === 'rgb(59, 130, 246)'; // Active color #3b82f6
+    }, { timeout: 5000 });
     
-    // Check that a different dot might be active now
-    // (we can't guarantee which one due to timing, but we verify the mechanism exists)
+    // Wait for rotation to occur (checking if a different dot becomes active)
+    // The carousel rotates every 3 seconds, so we check after 3.5 seconds
+    await page.waitForFunction(() => {
+      const buttons = Array.from(document.querySelectorAll('button[aria-label^="Go to achievement"]')) as HTMLElement[];
+      // Check if any button other than the first has the active color
+      return buttons.some((button, index) => {
+        if (index === 0) return false; // Skip first button
+        const bgColor = window.getComputedStyle(button).backgroundColor;
+        return bgColor === 'rgb(59, 130, 246)';
+      });
+    }, { timeout: 5000 });
+    
+    // Verify that we still have all 6 dots
     const dots = page.locator('button[aria-label^="Go to achievement"]');
     await expect(dots).toHaveCount(6);
   });
