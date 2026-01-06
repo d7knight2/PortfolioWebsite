@@ -540,6 +540,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: '0 auto',
     position: 'relative',
     height: 'clamp(280px, 40vw, 350px)',
+    paddingBottom: '3rem',
   },
   carousel: {
     display: 'flex',
@@ -589,7 +590,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     gap: '0.75rem',
     position: 'absolute',
-    bottom: '-2.5rem',
+    bottom: '0',
     left: '50%',
     transform: 'translateX(-50%)',
   },
