@@ -66,8 +66,8 @@ check_requirements() {
 get_open_prs() {
     log_info "Fetching open pull requests..."
     
-    # Get open PRs using GitHub CLI
-    local prs=$(gh pr list --state open --json number,headRefName,baseRefName,mergeable --jq '.[] | select(.mergeable == "CONFLICTING") | "\(.number):\(.headRefName):\(.baseRefName)"')
+    # Get open PRs using GitHub CLI (using tab as delimiter to avoid issues with colons in branch names)
+    local prs=$(gh pr list --state open --json number,headRefName,baseRefName,mergeable --jq '.[] | select(.mergeable == "CONFLICTING") | "\(.number)\t\(.headRefName)\t\(.baseRefName)"')
     
     if [ -z "$prs" ]; then
         log_info "No pull requests with conflicts found"
@@ -128,8 +128,8 @@ resolve_conflicts() {
     
     log_info "Processing PR #$pr_number: $head_branch -> $base_branch"
     
-    # Store the current branch
-    local original_branch=$(git branch --show-current)
+    # Store the current branch (compatible with older Git versions)
+    local original_branch=$(git rev-parse --abbrev-ref HEAD)
     
     # Create a temporary working branch with timestamp and PID for uniqueness
     local temp_branch="auto-resolve-conflicts-pr-$pr_number-$(date +%s)-$$"
@@ -174,14 +174,20 @@ Merge conflicts have been automatically resolved by merging the latest changes f
 
 Please review the changes to ensure they are correct." || log_warning "Failed to add comment to PR"
             
-            # Cleanup
-            git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
+            # Cleanup with explicit logging
+            if ! git checkout "$original_branch" 2>/dev/null; then
+                log_warning "Failed to return to original branch, switching to default"
+                git checkout "$(get_default_branch)" 2>/dev/null || true
+            fi
             git branch -D "$temp_branch" || true
             
             return $EXIT_SUCCESS
         else
             log_error "Failed to push resolved changes"
-            git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
+            if ! git checkout "$original_branch" 2>/dev/null; then
+                log_warning "Failed to return to original branch, switching to default"
+                git checkout "$(get_default_branch)" 2>/dev/null || true
+            fi
             git branch -D "$temp_branch" || true
             return $EXIT_RESOLUTION_FAILED
         fi
@@ -194,9 +200,9 @@ Please review the changes to ensure they are correct." || log_warning "Failed to
         
         if [ -n "$conflicted_files" ]; then
             log_info "Conflicted files:"
-            echo "$conflicted_files" | while read -r file; do
+            while read -r file; do
                 log_info "  - $file"
-            done
+            done <<< "$conflicted_files"
         else
             log_warning "No conflicted files found in diff (unexpected state)"
             conflicted_files="(Unable to determine conflicted files)"
@@ -205,8 +211,11 @@ Please review the changes to ensure they are correct." || log_warning "Failed to
         # Abort the merge
         git merge --abort
         
-        # Checkout back to original branch
-        git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
+        # Checkout back to original branch with explicit logging
+        if ! git checkout "$original_branch" 2>/dev/null; then
+            log_warning "Failed to return to original branch, switching to default"
+            git checkout "$(get_default_branch)" 2>/dev/null || true
+        fi
         git branch -D "$temp_branch" || true
         
         # Escape variables for markdown to prevent injection
@@ -263,8 +272,8 @@ main() {
     local failed_prs=0
     local manual_prs=0
     
-    # Process each PR with conflicts
-    while IFS=':' read -r pr_number head_branch base_branch; do
+    # Process each PR with conflicts (using tab as delimiter)
+    while IFS=$'\t' read -r pr_number head_branch base_branch; do
         total_prs=$((total_prs + 1))
         
         log_info "----------------------------------------"
