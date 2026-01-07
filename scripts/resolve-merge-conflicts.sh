@@ -150,10 +150,16 @@ Please review the changes to ensure they are correct." || log_warning "Failed to
         
         # Check for specific conflict types that can be auto-resolved
         local conflicted_files=$(git diff --name-only --diff-filter=U)
-        log_info "Conflicted files:"
-        echo "$conflicted_files" | while read -r file; do
-            log_info "  - $file"
-        done
+        
+        if [ -n "$conflicted_files" ]; then
+            log_info "Conflicted files:"
+            echo "$conflicted_files" | while read -r file; do
+                log_info "  - $file"
+            done
+        else
+            log_warning "No conflicted files found in diff (unexpected state)"
+            conflicted_files="(Unable to determine conflicted files)"
+        fi
         
         # Abort the merge
         git merge --abort
@@ -195,9 +201,13 @@ main() {
         exit $EXIT_MISSING_REQUIREMENTS
     fi
     
-    # Configure git
-    git config --global user.name "github-actions[bot]"
-    git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    # Note: Git configuration is handled by the GitHub Actions workflow
+    # This allows the script to work both in CI and locally
+    if [ -z "$(git config --global user.name)" ]; then
+        log_info "Configuring git..."
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    fi
     
     # Get open PRs with conflicts
     local conflicting_prs=$(get_open_prs)
@@ -219,17 +229,15 @@ main() {
         total_prs=$((total_prs + 1))
         
         log_info "----------------------------------------"
-        if resolve_conflicts "$pr_number" "$head_branch" "$base_branch"; then
+        resolve_conflicts "$pr_number" "$head_branch" "$base_branch"
+        local result=$?
+        
+        if [ $result -eq $EXIT_SUCCESS ]; then
             resolved_prs=$((resolved_prs + 1))
+        elif [ $result -eq $EXIT_CONFLICT_DETECTED ]; then
+            manual_prs=$((manual_prs + 1))
         else
-            case $? in
-                $EXIT_CONFLICT_DETECTED)
-                    manual_prs=$((manual_prs + 1))
-                    ;;
-                *)
-                    failed_prs=$((failed_prs + 1))
-                    ;;
-            esac
+            failed_prs=$((failed_prs + 1))
         fi
     done <<< "$conflicting_prs"
     
