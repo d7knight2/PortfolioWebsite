@@ -67,7 +67,9 @@ get_open_prs() {
     log_info "Fetching open pull requests..."
     
     # Get open PRs using GitHub CLI (using tab as delimiter to avoid issues with colons in branch names)
-    local prs=$(gh pr list --state open --json number,headRefName,baseRefName,mergeable --jq '.[] | select(.mergeable == "CONFLICTING") | "\(.number)\t\(.headRefName)\t\(.baseRefName)"')
+    # jq query: filter for conflicting PRs and format as: number<TAB>headBranch<TAB>baseBranch
+    local jq_query='.[] | select(.mergeable == "CONFLICTING") | "\(.number)\t\(.headRefName)\t\(.baseRefName)"'
+    local prs=$(gh pr list --state open --json number,headRefName,baseRefName,mergeable --jq "$jq_query")
     
     if [ -z "$prs" ]; then
         log_info "No pull requests with conflicts found"
