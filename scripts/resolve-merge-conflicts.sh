@@ -3,7 +3,7 @@
 # Script to detect and resolve merge conflicts in pull requests
 # This script is designed to be run by GitHub Actions on a schedule
 
-set -e  # Exit on error
+# Note: Not using 'set -e' to allow graceful error handling with specific exit codes
 set -o pipefail  # Catch errors in pipes
 
 # Color codes for logging
@@ -78,6 +78,48 @@ get_open_prs() {
     return $EXIT_SUCCESS
 }
 
+# Function to get default branch
+get_default_branch() {
+    # Try to get the default branch from origin/HEAD
+    local default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+    
+    if [ -n "$default_branch" ]; then
+        echo "$default_branch"
+    else
+        # Fallback to common default branch names
+        for branch in main master develop; do
+            if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+                echo "$branch"
+                return
+            fi
+        done
+        # Last resort: return 'main'
+        echo "main"
+    fi
+}
+
+# Function to escape markdown special characters
+escape_markdown() {
+    local text="$1"
+    # Escape backslashes first
+    text="${text//\\/\\\\}"
+    # Escape backticks
+    text="${text//\`/\\\`}"
+    # Escape asterisks
+    text="${text//\*/\\\*}"
+    # Escape underscores
+    text="${text//_/\\_}"
+    # Escape square brackets
+    text="${text//\[/\\\[}"
+    text="${text//\]/\\\]}"
+    # Escape parentheses
+    text="${text//\(/\\\(}"
+    text="${text//\)/\\\)}"
+    # Escape hash/pound
+    text="${text//#/\\\#}"
+    echo "$text"
+}
+
 # Function to attempt merge conflict resolution
 resolve_conflicts() {
     local pr_number=$1
@@ -123,8 +165,7 @@ resolve_conflicts() {
             log_success "Successfully pushed resolved changes for PR #$pr_number"
             
             # Escape variables for markdown to prevent injection
-            local escaped_base_branch="${base_branch//\\/\\\\}"
-            escaped_base_branch="${escaped_base_branch//\`/\\\`}"
+            local escaped_base_branch=$(escape_markdown "$base_branch")
             
             # Add a comment to the PR
             gh pr comment "$pr_number" --body "🤖 **Auto-Resolved Merge Conflicts**
@@ -134,13 +175,13 @@ Merge conflicts have been automatically resolved by merging the latest changes f
 Please review the changes to ensure they are correct." || log_warning "Failed to add comment to PR"
             
             # Cleanup
-            git checkout "$original_branch" 2>/dev/null || git checkout main 2>/dev/null || true
+            git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
             git branch -D "$temp_branch" || true
             
             return $EXIT_SUCCESS
         else
             log_error "Failed to push resolved changes"
-            git checkout "$original_branch" 2>/dev/null || git checkout main 2>/dev/null || true
+            git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
             git branch -D "$temp_branch" || true
             return $EXIT_RESOLUTION_FAILED
         fi
@@ -165,14 +206,12 @@ Please review the changes to ensure they are correct." || log_warning "Failed to
         git merge --abort
         
         # Checkout back to original branch
-        git checkout "$original_branch" 2>/dev/null || git checkout main 2>/dev/null || true
+        git checkout "$original_branch" 2>/dev/null || git checkout "$(get_default_branch)" 2>/dev/null || true
         git branch -D "$temp_branch" || true
         
         # Escape variables for markdown to prevent injection
-        local escaped_base_branch="${base_branch//\\/\\\\}"
-        escaped_base_branch="${escaped_base_branch//\`/\\\`}"
-        local escaped_files="${conflicted_files//\\/\\\\}"
-        escaped_files="${escaped_files//\`/\\\`}"
+        local escaped_base_branch=$(escape_markdown "$base_branch")
+        local escaped_files=$(escape_markdown "$conflicted_files")
         
         # Add a comment to notify about conflicts
         gh pr comment "$pr_number" --body "⚠️ **Merge Conflicts Detected**
