@@ -89,8 +89,8 @@ resolve_conflicts() {
     # Store the current branch
     local original_branch=$(git branch --show-current)
     
-    # Create a temporary working branch
-    local temp_branch="auto-resolve-conflicts-pr-$pr_number-$(date +%s)"
+    # Create a temporary working branch with timestamp and PID for uniqueness
+    local temp_branch="auto-resolve-conflicts-pr-$pr_number-$(date +%s)-$$"
     
     log_info "Creating temporary branch: $temp_branch"
     
@@ -122,10 +122,14 @@ resolve_conflicts() {
         if git push origin "$temp_branch:$head_branch"; then
             log_success "Successfully pushed resolved changes for PR #$pr_number"
             
+            # Escape variables for markdown to prevent injection
+            local escaped_base_branch="${base_branch//\\/\\\\}"
+            escaped_base_branch="${escaped_base_branch//\`/\\\`}"
+            
             # Add a comment to the PR
             gh pr comment "$pr_number" --body "🤖 **Auto-Resolved Merge Conflicts**
 
-Merge conflicts have been automatically resolved by merging the latest changes from \`$base_branch\`.
+Merge conflicts have been automatically resolved by merging the latest changes from \`${escaped_base_branch}\`.
 
 Please review the changes to ensure they are correct." || log_warning "Failed to add comment to PR"
             
@@ -158,14 +162,20 @@ Please review the changes to ensure they are correct." || log_warning "Failed to
         git checkout "$original_branch" 2>/dev/null || git checkout main 2>/dev/null || true
         git branch -D "$temp_branch" || true
         
+        # Escape variables for markdown to prevent injection
+        local escaped_base_branch="${base_branch//\\/\\\\}"
+        escaped_base_branch="${escaped_base_branch//\`/\\\`}"
+        local escaped_files="${conflicted_files//\\/\\\\}"
+        escaped_files="${escaped_files//\`/\\\`}"
+        
         # Add a comment to notify about conflicts
         gh pr comment "$pr_number" --body "⚠️ **Merge Conflicts Detected**
 
-This pull request has merge conflicts with the \`$base_branch\` branch that require manual resolution.
+This pull request has merge conflicts with the \`${escaped_base_branch}\` branch that require manual resolution.
 
 **Conflicted files:**
 \`\`\`
-$conflicted_files
+${escaped_files}
 \`\`\`
 
 Please resolve these conflicts manually." || log_warning "Failed to add comment to PR"

@@ -7,11 +7,6 @@ on:
   
   # Allow manual triggering for testing
   workflow_dispatch:
-  
-  # Also run when PRs are updated (optional, for faster detection)
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main, develop]
 
 permissions:
   contents: write        # Required to push resolved changes
@@ -22,10 +17,6 @@ jobs:
   resolve-conflicts:
     name: Resolve Merge Conflicts
     runs-on: ubuntu-latest
-    
-    # Only run on schedule or manual dispatch, not on every PR update
-    # This prevents spam while still allowing manual testing
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout repository
@@ -94,18 +85,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Conflicting PRs Found:** ${{ steps.check_conflicts.outputs.conflicts_found }}" >> $GITHUB_STEP_SUMMARY
       
-      - name: Upload logs
-        if: always() && steps.check_conflicts.outputs.conflicts_found > 0
-        uses: actions/upload-artifact@v4
-        with:
-          name: conflict-resolution-logs-${{ github.run_id }}
-          path: |
-            ${{ github.workspace }}/.git/
-            !${{ github.workspace }}/.git/objects
-            !${{ github.workspace }}/.git/refs
-          retention-days: 7
-          if-no-files-found: ignore
-      
       # Only send notifications for meaningful events
       - name: Notify on resolution
         if: steps.resolve.outcome == 'success' && steps.check_conflicts.outputs.conflicts_found > 0
@@ -125,7 +104,7 @@ jobs:
     name: Workflow Summary
     runs-on: ubuntu-latest
     needs: resolve-conflicts
-    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    if: always()
     
     steps:
       - name: Generate summary
