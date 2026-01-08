@@ -1,0 +1,123 @@
+name: Auto-Resolve Merge Conflicts
+
+on:
+  # Run hourly to detect and handle merge conflicts
+  schedule:
+    - cron: '0 * * * *'  # Every hour at minute 0
+  
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+permissions:
+  contents: write        # Required to push resolved changes
+  pull-requests: write   # Required to comment on PRs
+
+jobs:
+  resolve-conflicts:
+    name: Resolve Merge Conflicts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history to properly resolve conflicts
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup GitHub CLI
+        run: |
+          # GitHub CLI is pre-installed on ubuntu-latest runners
+          gh --version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Check for conflicting PRs
+        id: check_conflicts
+        run: |
+          echo "Checking for pull requests with merge conflicts..."
+          
+          # Get count of PRs with conflicts
+          CONFLICT_COUNT=$(gh pr list --state open --json mergeable --jq '[.[] | select(.mergeable == "CONFLICTING")] | length')
+          
+          echo "conflicts_found=$CONFLICT_COUNT" >> $GITHUB_OUTPUT
+          echo "Found $CONFLICT_COUNT PR(s) with conflicts"
+          
+          if [ "$CONFLICT_COUNT" -eq 0 ]; then
+            echo "No conflicts detected. Workflow will exit gracefully."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Run conflict resolution script
+        if: steps.check_conflicts.outputs.conflicts_found != '0'
+        id: resolve
+        run: |
+          echo "Running merge conflict resolution script..."
+          bash scripts/resolve-merge-conflicts.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      
+      - name: Report results
+        if: steps.check_conflicts.outputs.conflicts_found != '0'
+        run: |
+          echo "### Merge Conflict Resolution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.resolve.outcome }}" == "success" ]; then
+            echo "✅ **Status:** Completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The conflict resolution script ran successfully. Check individual PR comments for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Status:** Completed with issues" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Some conflicts may require manual intervention. Check the logs and PR comments for details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Conflicting PRs Found:** ${{ steps.check_conflicts.outputs.conflicts_found }}" >> $GITHUB_STEP_SUMMARY
+      
+      # Only send notifications for meaningful events
+      - name: Notify on resolution
+        if: steps.resolve.outcome == 'success' && steps.check_conflicts.outputs.conflicts_found != '0'
+        run: |
+          echo "✅ Successfully processed ${{ steps.check_conflicts.outputs.conflicts_found }} PR(s) with conflicts"
+          echo "Notifications have been added to individual PRs"
+      
+      - name: Notify on failure
+        if: steps.resolve.outcome == 'failure' && steps.check_conflicts.outputs.conflicts_found != '0'
+        run: |
+          echo "⚠️ Conflict resolution encountered issues for some PRs"
+          echo "Manual intervention may be required. Check PR comments for details."
+          exit 0  # Don't fail the workflow, just log the issue
+
+  # Summary job to avoid noise when there are no conflicts
+  summary:
+    name: Workflow Summary
+    runs-on: ubuntu-latest
+    needs: resolve-conflicts
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        run: |
+          echo "### Auto-Resolve Merge Conflicts Workflow" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Time:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.resolve-conflicts.result }}" == "success" ]; then
+            echo "✅ Workflow completed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.resolve-conflicts.result }}" == "skipped" ]; then
+            echo "ℹ️ No conflicts detected - workflow skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Workflow completed with issues" >> $GITHUB_STEP_SUMMARY
+          fi
