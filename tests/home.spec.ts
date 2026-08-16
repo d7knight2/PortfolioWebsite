@@ -45,4 +45,16 @@ test.describe('Home Page', () => {
     const heading = page.locator('h1');
     await expect(heading.first()).toBeVisible();
   });
+
+  test('should highlight four Tinder hackathon wins', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('4× Tinder Hackathon Winner').first()).toBeVisible();
+    await expect(page.getByText('Four-time Tinder Hackathon Winner')).toBeVisible();
+    await expect(page.getByText('2020 — Skinz')).toBeVisible();
+    await expect(page.getByText('2021 — Stacks on Stacks')).toBeVisible();
+    await expect(page.getByText('2023 — Black Pearl')).toBeVisible();
+    await expect(page.getByText('2025 — Anti Abuse Agent')).toBeVisible();
+  });
 });

@@ -7,12 +7,14 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
 
   const achievements = [
+    { emoji: '🏆', title: '4× Tinder Hackathon Winner', subtitle: 'Skinz · Stacks · Black Pearl · Anti Abuse Agent', color: '#fbbf24' },
     { emoji: '🏆', title: '2021 Tinder All Stars', subtitle: 'First Android All Star Ever!', color: '#fbbf24' },
     { emoji: '🌺', title: '2021 Kudos Award', subtitle: 'Trip to Maui, Hawaii', color: '#f472b6' },
     { emoji: '🤖', title: 'AI Champion', subtitle: 'Tinder AI Champion Nominee', color: '#60a5fa' },
-    { emoji: '🥇', title: 'Stacks on Stacks 2022', subtitle: '1st Place Hackathon', color: '#fbbf24' },
-    { emoji: '🥈', title: 'Black Pearl 2022', subtitle: '2nd Place Hackathon', color: '#94a3b8' },
-    { emoji: '🥉', title: 'Skinz 2021', subtitle: '3rd Place Hackathon', color: '#d97706' },
+    { emoji: '🥇', title: 'Anti Abuse Agent 2025', subtitle: 'Tinder Hackathon Winner', color: '#fbbf24' },
+    { emoji: '🥇', title: 'Black Pearl 2023', subtitle: 'Tinder Hackathon Winner', color: '#fbbf24' },
+    { emoji: '🥇', title: 'Stacks on Stacks 2021', subtitle: 'Tinder Hackathon Winner', color: '#fbbf24' },
+    { emoji: '🥇', title: 'Skinz 2020', subtitle: 'Tinder Hackathon Winner', color: '#fbbf24' },
   ];
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function Home() {
     <>
       <Head>
         <title>David Knight - Android Developer Portfolio</title>
-        <meta name="description" content="Personal portfolio of David Knight, passionate Android Developer specializing in Kotlin, MVVM, and Jetpack Compose" />
+        <meta name="description" content="Personal portfolio of David Knight, Android Developer and four-time Tinder hackathon winner specializing in Kotlin, MVVM, and Jetpack Compose" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -81,7 +83,7 @@ export default function Home() {
                 Hi there, I'm <span style={styles.highlightText}>David Knight</span>! 👋
               </h1>
               <p style={styles.heroSubtitle}>
-                Android Developer | Kotlin Expert | Performance Enthusiast
+                Android Developer | Kotlin Expert | 4× Tinder Hackathon Winner
               </p>
               <p style={styles.heroDescription}>
                 I'm a passionate Android Developer with expertise in crafting high-performance, 
@@ -202,20 +204,23 @@ export default function Home() {
                     <li style={styles.accomplishmentItem}>
                       🤖 Nominated as a Tinder AI Champion
                     </li>
+                    <li style={styles.accomplishmentItem}>
+                      🏆 Four-time Tinder Hackathon Winner — Skinz, Stacks, Black Pearl, and Anti Abuse Agent
+                    </li>
                   </ul>
                   <h4 style={styles.accomplishmentsTitle}>Hackathon Victories:</h4>
                   <ul style={styles.accomplishmentsList}>
                     <li style={styles.accomplishmentItem}>
-                      🥇 Hackathon "Stacks on Stacks" 2022 - 1st Place
+                      🥇 2025 — Anti Abuse Agent
                     </li>
                     <li style={styles.accomplishmentItem}>
-                      🥈 Hackathon "Black Pearl" 2022 - 2nd Place
+                      🥇 2023 — Black Pearl
                     </li>
                     <li style={styles.accomplishmentItem}>
-                      🥉 Hackathon "Skinz" 2021 - 3rd Place
+                      🥇 2021 — Stacks on Stacks
                     </li>
                     <li style={styles.accomplishmentItem}>
-                      🥉 Hackathon "Anti Abuse Agent" 2025 - 3rd Place
+                      🥇 2020 — Skinz
                     </li>
                   </ul>
                 </div>

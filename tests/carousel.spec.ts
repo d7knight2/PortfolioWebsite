@@ -13,14 +13,14 @@ test.describe('Achievements Carousel', () => {
 
   test('should display all carousel dots', async ({ page }) => {
     const dots = page.locator('button[aria-label^="Go to achievement"]');
-    await expect(dots).toHaveCount(6);
+    await expect(dots).toHaveCount(8);
   });
 
   test('should display the first achievement card by default', async ({ page }) => {
     // Wait for the carousel to be visible
-    await page.locator('h3:has-text("2021 Tinder All Stars")').waitFor({ state: 'visible' });
+    await page.locator('h3:has-text("4× Tinder Hackathon Winner")').waitFor({ state: 'visible' });
     
-    const firstCard = page.locator('h3:has-text("2021 Tinder All Stars")');
+    const firstCard = page.locator('h3:has-text("4× Tinder Hackathon Winner")');
     await expect(firstCard).toBeVisible();
   });
 
@@ -39,7 +39,7 @@ test.describe('Achievements Carousel', () => {
     }, { timeout: 2000 });
     
     // Check that an achievement card is visible
-    const achievementCards = page.locator('h3').filter({ hasText: /Kudos Award|AI Champion|Stacks on Stacks|Black Pearl|Skinz/ });
+    const achievementCards = page.locator('h3').filter({ hasText: /Kudos Award|AI Champion|Stacks on Stacks|Black Pearl|Skinz|Anti Abuse Agent|Hackathon Winner/ });
     await expect(achievementCards.first()).toBeVisible();
   });
 
@@ -101,12 +101,14 @@ test.describe('Achievements Carousel', () => {
 
   test('should have all required achievement cards', async ({ page }) => {
     const expectedAchievements = [
+      '4× Tinder Hackathon Winner',
       '2021 Tinder All Stars',
       '2021 Kudos Award',
       'AI Champion',
-      'Stacks on Stacks 2022',
-      'Black Pearl 2022',
-      'Skinz 2021'
+      'Anti Abuse Agent 2025',
+      'Black Pearl 2023',
+      'Stacks on Stacks 2021',
+      'Skinz 2020'
     ];
 
     for (const achievement of expectedAchievements) {
@@ -173,9 +175,9 @@ test.describe('Achievements Carousel - Auto-rotation', () => {
       });
     }, { timeout: 5000 });
     
-    // Verify that we still have all 6 dots
+    // Verify that we still have all 8 dots
     const dots = page.locator('button[aria-label^="Go to achievement"]');
-    await expect(dots).toHaveCount(6);
+    await expect(dots).toHaveCount(8);
   });
 });
 
@@ -189,7 +191,7 @@ test.describe('Achievements Carousel - Responsive Design', () => {
     await expect(achievementsHeading).toBeVisible();
     
     const dots = page.locator('button[aria-label^="Go to achievement"]');
-    await expect(dots).toHaveCount(6);
+    await expect(dots).toHaveCount(8);
   });
 
   test('should display properly on tablet', async ({ page }) => {
@@ -201,7 +203,7 @@ test.describe('Achievements Carousel - Responsive Design', () => {
     await expect(achievementsHeading).toBeVisible();
     
     const dots = page.locator('button[aria-label^="Go to achievement"]');
-    await expect(dots).toHaveCount(6);
+    await expect(dots).toHaveCount(8);
   });
 
   test('should display properly on small mobile', async ({ page }) => {
@@ -215,6 +217,6 @@ test.describe('Achievements Carousel - Responsive Design', () => {
     await expect(achievementsHeading).toBeVisible();
     
     const dots = page.locator('button[aria-label^="Go to achievement"]');
-    await expect(dots).toHaveCount(6);
+    await expect(dots).toHaveCount(8);
   });
 });
