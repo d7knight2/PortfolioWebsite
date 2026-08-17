@@ -73,6 +73,20 @@ This project is configured for automatic deployment on Vercel:
 2. Connect your repository to Vercel
 3. Vercel will automatically build and deploy
 
+GitHub Actions also validates the Vercel build on pull requests. To enable CLI deploys from Actions, add these repository secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+Optional: `VERCEL_AUTOMATION_BYPASS_SECRET` lets UI tests reach Deployment Protection–gated preview URLs.
+
+## ✅ GitHub Actions
+
+- **CI**: lint, Next.js build, and Playwright tests
+- **Vercel**: validates `vercel.json`, runs a production build, and deploys preview/production when Vercel secrets are configured
+- **UI Tests**: Playwright UI tests across desktop and mobile browsers, plus tests against live Vercel preview URLs when a deployment succeeds
+
 ## 📁 Project Structure
 
 ```
