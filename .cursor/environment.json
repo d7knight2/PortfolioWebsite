@@ -1,0 +1,8 @@
+{
+  "name": "portfolio-and-android-ci",
+  "install": "npm ci",
+  "repositoryDependencies": [
+    "github.com/d7knight2/CiKnight",
+    "github.com/d7knight2/AnrWatchdog"
+  ]
+}
